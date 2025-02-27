@@ -1,0 +1,207 @@
+{% extends base_template %}
+{% load static %}
+{% block title %}Finance Report{% endblock %}
+
+{% block content %}
+
+<div class="page-wrapper" style="min-height: 816px; margin-left: 0;">
+  <div class="content">
+    <div class="page-header">
+      <div class="page-title text-center">
+        <h4>Finance Report</h4>
+        <h6>Generate Custom Financial Report</h6>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <form method="post" id="report_form" action="{% url 'finance_report' %}">
+          {% csrf_token %}
+
+          {% if request.user.user_type == 'admin' %}
+          <div class="row justify-content-center mb-3">
+            <div class="col-lg-6 col-sm-8 col-12">
+              <div class="form-group">
+                <label>Generate Report For:</label>
+                <select name="report_user_type" class="form-control" required>
+                  <option value="">Select User Type</option>
+                  {% for ut in user_types %}
+                    <option value="{{ ut }}">{{ ut|capfirst }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="row justify-content-center mb-3">
+            <div class="col-lg-6 col-sm-8 col-12">
+              <div class="form-group">
+                <label>Report Format</label>
+                <select name="report_format" id="report_format" class="form-control" required>
+                  <option value="">Select Format</option>
+                  <option value="excel">Excel</option>
+                  <option value="pdf">PDF</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- PDF Section -->
+          <div id="pdf_section" style="display: none;">
+            <div class="row justify-content-center mb-3">
+              <div class="col-lg-6 col-sm-8 col-12">
+                <div class="form-group">
+                  <label>Select Month and Year</label>
+                  <input type="month" name="pdf_month_year" class="form-control">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Excel Section -->
+          <div id="excel_section" style="display: none;">
+            <div class="row justify-content-center mb-3">
+              <div class="col-lg-5 col-sm-6 col-12">
+                <div class="form-group">
+                  <label>Select Model</label>
+                  <select name="model_choice" class="form-control">
+                    <option value="">Select Model</option>
+                    <option value="transaction">Transaction</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-lg-5 col-sm-6 col-12">
+                <div class="form-group">
+                  <label>Date Range</label>
+                  <select name="date_range_option" id="date_range_option" class="form-control">
+                    <option value="today">Today</option>
+                    <option value="weekly">This Week</option>
+                    <option value="monthly">This Month</option>
+                    <option value="yearly">This Year</option>
+                    <option value="custom">Custom Range</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Custom Date Range Fields -->
+            <div id="custom_date_range" class="row justify-content-center mb-3" style="display: none;">
+              <div class="col-lg-5 col-sm-6 col-12">
+                <div class="form-group">
+                  <label>Start Date</label>
+                  <input type="date" name="custom_start_date" class="form-control">
+                </div>
+              </div>
+              <div class="col-lg-5 col-sm-6 col-12">
+                <div class="form-group">
+                  <label>End Date</label>
+                  <input type="date" name="custom_end_date" class="form-control">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="row justify-content-center">
+            <div class="col-lg-6 col-sm-8 col-12 text-center">
+              <button type="submit" class="btn btn-submit me-2">
+                <i class="fa fa-download mr-2"></i>Generate Report
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- jQuery and Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+$(document).ready(function() {
+  // Toggle the display of PDF/Excel sections based on the selected format
+  $('#report_format').on('change', function() {
+    var format = $(this).val();
+    if (format === 'pdf') {
+      $('#pdf_section').fadeIn(300);
+      $('#excel_section').fadeOut(300);
+      $('#pdf_section input').prop('required', true);
+      $('#excel_section select').prop('required', false);
+    } else if (format === 'excel') {
+      $('#excel_section').fadeIn(300);
+      $('#pdf_section').fadeOut(300);
+      $('#excel_section select[name="model_choice"], #excel_section select[name="date_range_option"]').prop('required', true);
+      $('#pdf_section input').prop('required', false);
+    } else {
+      $('#pdf_section, #excel_section').fadeOut(300);
+      $('#pdf_section input, #excel_section select').prop('required', false);
+    }
+  });
+
+  // Toggle custom date range fields for Excel
+  $('#date_range_option').on('change', function() {
+    if ($(this).val() === 'custom') {
+      $('#custom_date_range').fadeIn(300);
+      $('#custom_date_range input').prop('required', true);
+    } else {
+      $('#custom_date_range').fadeOut(300);
+      $('#custom_date_range input').prop('required', false);
+    }
+  });
+
+  // Intercept form submission for PDF reports to handle AJAX download
+  $('#report_form').on('submit', function(event) {
+    var format = $('#report_format').val();
+    if (format === 'pdf') {
+      event.preventDefault();
+      var monthYear = $('input[name="pdf_month_year"]').val();
+      if (!monthYear) {
+        alert("Please select month and year for the PDF report.");
+        return;
+      }
+      var parts = monthYear.split('-');
+      var year = parts[0];
+      var month = parts[1];
+      var url = '/generate_report_pdf/' + month + '/' + year + '/';
+      {% if request.user.user_type == 'admin' %}
+      var userType = $('select[name="report_user_type"]').val();
+      if (userType) {
+        url += '?report_user_type=' + encodeURIComponent(userType);
+      }
+      {% endif %}
+      
+      var $btn = $(this).find('button[type="submit"]');
+      $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin mr-2"></i>Generating...');
+      
+      $.ajax({
+        url: url,
+        method: 'GET',
+        xhrFields: { responseType: 'blob' },
+        success: function(data, status, xhr) {
+          var blob = new Blob([data], { type: 'application/pdf' });
+          var link = document.createElement('a');
+          link.href = window.URL.createObjectURL(blob);
+          var disposition = xhr.getResponseHeader('Content-Disposition');
+          var filename = disposition && disposition.match(/filename="(.+)"/)
+              ? disposition.match(/filename="(.+)"/)[1]
+              : 'finance_report_' + month + '_' + year + '.pdf';
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          $btn.prop('disabled', false).html('<i class="fa fa-download mr-2"></i>Generate Report');
+        },
+        error: function(xhr, status, error) {
+          alert("Error generating PDF report: " + error);
+          $btn.prop('disabled', false).html('<i class="fa fa-download mr-2"></i>Generate Report');
+        }
+      });
+    }
+    // For Excel, allow normal form submission.
+  });
+});
+</script>
+{% endblock %}

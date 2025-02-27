@@ -1,0 +1,33 @@
+from expense_tracker.wsgi import application
+
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'expenseteds2l_expense_tracker',
+        'USER': 'expenseteds2l_ted_s2l_expense_tracker',
+        'PASSWORD': 'R0m@nR@ing',
+        'HOST': 'localhost',  
+        'PORT': '3306',  
+    }
+}
+
+
+
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),  # This tells Django to look for static files here
+]
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+AUTH_USER_MODEL = 'account.User'
+LOGIN_URL = '/users/login/'
+
+# settings.py
+USE_TZ = True  # Enable timezone support
+TIME_ZONE = 'Asia/Dhaka'  # Set to Bangladesh time

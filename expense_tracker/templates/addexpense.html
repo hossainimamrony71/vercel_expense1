@@ -1,0 +1,209 @@
+{% extends base_template %}
+
+{% load static %}
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+  <!-- Include Select2 CSS -->
+   {% comment %} <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />  {% endcomment %}
+    /* Custom styling for select2 dropdown options on hover */
+    .select2-results__option--highlighted {
+      background-color: #FFA500 !important;
+    }
+    /* Adjust select element styling if needed */
+    #category_select,
+    #subcategory_select {
+        font-size: 14px;
+        padding: 8px;
+        width: 100%;
+        max-width: 250px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #fff;
+    }
+    #category_select:hover,
+    #subcategory_select:hover {
+        border-color: #FFA500;
+    }
+    #category_select:focus,
+    #subcategory_select:focus {
+        border-color: #FFA500;
+        outline: none;
+    }
+    .text-danger p {
+        margin: 0;
+        font-size: 12px;
+    }
+
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+   <div class="page-title">
+      <h4>{% if is_update %}Expense Update{% else %}Expense Add{% endif %}</h4>
+      <h6>{% if is_update %}Update Existing Expense{% else %}Create New Expense{% endif %}</h6>
+   </div>
+</div>
+
+<div class="card">
+   <div class="card-body">
+      <form method="post" action="">
+          {% csrf_token %}
+          <div class="row">
+            <!-- Amount Field -->
+            <div class="col-lg-4 col-sm-6 col-12">
+               <div class="form-group">
+                  <label>Amount</label>
+                  <input type="text" name="ammount" class="form-control" placeholder="Enter amount"
+                         value="{{ form.ammount.value|default_if_none:'' }}">
+                  {% if form.ammount.errors %}
+                    <div class="text-danger">
+                       {% for error in form.ammount.errors %}
+                          <p>{{ error }}</p>
+                       {% endfor %}
+                    </div>
+                  {% endif %}
+               </div>
+            </div>
+         
+
+         
+            <!-- Voucher Field -->
+            <div class="col-lg-4 col-sm-6 col-12">
+               <div class="form-group">
+                  <label>Voucher</label>
+                  <input type="text" name="voucher" class="form-control" placeholder="Enter voucher"
+                         value="{{ form.voucher.value|default_if_none:'' }}">
+                  {% if form.voucher.errors %}
+                    <div class="text-danger">
+                       {% for error in form.voucher.errors %}
+                          <p>{{ error }}</p>
+                       {% endfor %}
+                    </div>
+                  {% endif %}
+               </div>
+            </div>
+         
+            <!-- Category Dropdown -->
+            <div class="col-lg-4 col-sm-6 col-12">
+               <div class="form-group">
+                  <label>Category</label>
+                  {{ form.category }}
+                  {% if form.category.errors %}
+                    <div class="text-danger">
+                       {% for error in form.category.errors %}
+                          <p>{{ error }}</p>
+                       {% endfor %}
+                    </div>
+                  {% endif %}
+               </div>
+            </div>
+         
+            <!-- Subcategory Dropdown -->
+            <div class="col-lg-4 col-sm-6 col-12">
+               <div class="form-group">
+                  <label>Subcategory</label>
+                  {{ form.subcategory }}
+                  {% if form.subcategory.errors %}
+                    <div class="text-danger">
+                       {% for error in form.subcategory.errors %}
+                          <p>{{ error }}</p>
+                       {% endfor %}
+                    </div>
+                  {% endif %}
+               </div>
+            </div>
+         
+            <!-- Source Field -->
+            <div class="col-lg-4 col-sm-6 col-12">
+               <div class="form-group">
+                  <label>Source</label>
+                  <input type="text" name="source" class="form-control" value="{{ form.source.value|default:"cash" }}">
+                  {% if form.source.errors %}
+                    <div class="text-danger">
+                       {% for error in form.source.errors %}
+                          <p>{{ error }}</p>
+                       {% endfor %}
+                    </div>
+                  {% endif %}
+               </div>
+            </div>
+         
+            <!-- Exact Date Field -->
+            <div class="col-lg-4 col-sm-6 col-12">
+               <div class="form-group">
+                  <label>Exact Date</label>
+                  {{ form.created_at }}
+                  {% if form.created_at.errors %}
+                    <div class="text-danger">
+                       {% for error in form.created_at.errors %}
+                          <p>{{ error }}</p>
+                       {% endfor %}
+                    </div>
+                  {% endif %}
+               </div>
+            </div>
+
+            <!-- Submit and Cancel Buttons -->
+            <div class="col-lg-12">
+               <button type="submit" class="btn btn-submit me-2">Submit</button>
+               <a href="{% url 'expense-list' %}" class="btn btn-cancel">Cancel</a>
+            </div>
+         </div>
+         
+      </form>
+   </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+  <!-- Include jQuery and Select2 JS -->
+  {% comment %} <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script> {% endcomment %}
+  <script>
+    $(document).ready(function(){
+        // Initialize Select2 on category (without tagging)
+        $('#category_select').select2({
+            placeholder: 'Select Category',
+            width: '100%'
+        });
+        
+        // Initialize Select2 on subcategory with tagging enabled
+        $('#subcategory_select').select2({
+            placeholder: 'Select or type a new subcategory',
+            tags: true,
+            width: '100%'
+        });
+        
+        // When the category changes, fetch its subcategories via AJAX
+        $('#category_select').on('change', function(){
+            var categoryId = $(this).val();
+            $.ajax({
+                url: "{% url 'load-subcategories' %}",
+                data: {
+                    'category': categoryId
+                },
+                success: function(data) {
+                    var subcategorySelect = $('#subcategory_select');
+                    // Clear current options
+                    subcategorySelect.empty();
+                    // Add a blank option so that the placeholder is shown
+                    subcategorySelect.append(new Option('', '', false, false));
+                    // Append each subcategory option from the response
+                    $.each(data, function(index, subcategory){
+                        var newOption = new Option(subcategory.name, subcategory.id, false, false);
+                        subcategorySelect.append(newOption);
+                    });
+                    // Update Select2 (important when dynamically changing the options)
+                    subcategorySelect.trigger('change');
+                }
+            });
+        });
+    });
+  </script>
+{% endblock %}
+
+   

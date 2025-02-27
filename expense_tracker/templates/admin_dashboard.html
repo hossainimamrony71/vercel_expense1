@@ -1,0 +1,471 @@
+{% extends  base_template%}
+{% load static %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-3 col-sm-6 col-12">
+      <div class="dash-widget dash1">
+        <div class="dash-widgetimg">
+          <span>
+            <img src="{% static 'assets/img/icons/dash2.svg' %}" alt="img">
+          </span>
+        </div>
+        <div class="dash-widgetcontent">
+          <h5> <span class="counters" data-count="{{ balance }}"></span>
+            ৳</h5>
+          <h6>Balance</h6>
+        </div>
+      </div>
+    </div>
+  
+    {% if request.user.user_type == 'admin' %}
+    <div class="col-lg-3 col-sm-6 col-12">
+          <div class="dash-widget" >
+            <div class="dash-widgetimg">
+              <span>
+                <img style="border-radius: 50%; border: none;" src="{% static 'assets/img/ted.png' %}" alt="img">
+              </span>
+            </div>
+            <div  class="dash-widgetcontent" >
+              <h5 {% if ted_admin_balance == 0 %}style="color: red;"{% endif %}> <span  class="counters" data-count="{{ ted_admin_balance }}"></span>
+                ৳</h5>
+              <h6>TED Left</h6>
+            </div>
+          </div>
+    </div>
+    
+    <div class="col-lg-3 col-sm-6 col-12">
+          <div class="dash-widget dash2" >
+            <div class="dash-widgetimg">
+              <span>
+                <img style="border-radius: 50%; border: none;" src="{% static 'assets/img/s2l.png' %}" alt="img">
+              </span>
+            </div>
+            <div class="dash-widgetcontent">
+              <h5 {% if s2l_admin_balance == 0 %}style="color: red;"{% endif %} > <span class="counters" data-count="{{ s2l_admin_balance }}"></span>
+                ৳</h5>
+              <h6>S2L Left</h6>
+            </div>
+          </div>
+    </div>
+{% elif request.user.user_type in 'ted' or 's2l' %}
+    <div class="col-lg-3 col-sm-6 col-12">
+      <div class="dash-widget">
+        <div class="dash-widgetimg">
+          <span>
+            <img src="{% static 'assets/img/icons/dash1.svg' %}" alt="img">
+          </span>
+        </div>
+        <div class="dash-widgetcontent">
+          <h5> <span class="counters" data-count="{{ total_expense }}"></span>
+            ৳</h5>
+          <h6>Total spending</h6>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-3 col-sm-6 col-12">
+      <div class="dash-widget dash2">
+        <div class="dash-widgetimg">
+          <span>
+            <img src="{% static 'assets/img/icons/dash3.svg' %}" alt="img">
+          </span>
+        </div>
+        <div class="dash-widgetcontent">
+          <h5> <span class="counters" data-count="{{ today_expense }}"></span>
+            ৳</h5>
+          <h6>Today Expense</h6>
+        </div>
+      </div>
+    </div>
+{% endif %}
+
+
+    <div class="col-lg-3 col-sm-6 col-12">
+      <div class="dash-widget dash3">
+        <div class="dash-widgetimg">
+          <span>
+            <img src="{% static 'assets/img/cash-flow.png' %}" alt="img">
+          </span>
+        </div>
+        <div class="dash-widgetcontent">
+          <h5> <span class="counters" data-count="{{ recent_allocated_money }}"></span>
+            ৳</h5>
+          <h6>Recent Allocated</h6>
+        </div>
+      </div>
+    </div>
+    {% if show_row %}
+    <div class="col-lg-3 col-sm-6 col-12 d-flex">
+      <div class="dash-count">
+        <div class="dash-counts">
+          <h4>{{ recent_allocations_ted }}</h4>
+          <h5>Recent TED Allocations</h5>
+        </div>
+        <div class="dash-imgs">
+          <i data-feather="user"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-sm-6 col-12 d-flex">
+      <div class="dash-count das1">
+        <div class="dash-counts">
+          <h4>{{ recent_allocations_s2l }}</h4>
+          <h5>Recent S2L Allocations
+          </h5>
+        </div>
+        <div class="dash-imgs">
+          <i data-feather="user-check"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-sm-6 col-12 d-flex">
+      <div class="dash-count das2">
+        <div class="dash-counts">
+          <h4>{{ total_allocated_ted }}</h4>
+          <h5>Total TED allocation</h5>
+        </div>
+        <div class="dash-imgs">
+          <i data-feather="file-text"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-sm-6 col-12 d-flex">
+      <div class="dash-count das3">
+        <div class="dash-counts">
+          <h4>{{ total_allocated_s2l }}</h4>
+          <h5>Total S2L Allocations</h5>
+        </div>
+        <div class="dash-imgs">
+          <i data-feather="file"></i>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div class="row">
+{% if show_row %}
+<div class="col-lg-7 col-sm-12 col-12 d-flex">
+  <div class="card flex-fill">
+    <div class="card-header-custom pb-0 d-flex justify-content-between align-items-center">
+      <h5 class="card-title-custom mb-0">Expense Statistics</h5>
+      <div class="graph-sets-custom">
+        <ul id="dataToggle-custom">
+          <li class="active" data-type="ted">
+            <span>TED</span>
+          </li>
+          <li data-type="s2l">
+            <span>S2L</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="card-body-custom">
+      <div id="sales_charts-custom" style="position: relative; height: 300px;">
+        <canvas id="pieChart-custom"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  var tedLabels = {{ pie_ted_labels|safe }};
+  var tedValues = {{ pie_ted_values|safe }};
+  var s2lLabels = {{ pie_s2l_labels|safe }};
+  var s2lValues = {{ pie_s2l_values|safe }};
+  
+  var currentLabels = tedLabels;
+  var currentValues = tedValues;
+  
+  var ctx = document.getElementById('pieChart-custom').getContext('2d');
+  var pieChartCustom = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: currentLabels,
+      datasets: [{
+        data: currentValues,
+        backgroundColor: [
+          '#664dc9',
+          '#44c4fa',
+          '#38cb89',
+          '#ef4b4b',
+          '#ffab00'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'left',
+          labels: {
+            boxWidth: 15,
+            padding: 10
+          }
+        },
+        tooltip: { enabled: true }
+      }
+    }
+  });
+  
+  function updateChartCustom(newLabels, newData) {
+    pieChartCustom.data.labels = newLabels;
+    pieChartCustom.data.datasets[0].data = newData;
+    pieChartCustom.update();
+  }
+  
+  document.querySelectorAll('#dataToggle-custom li').forEach(function(item) {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('#dataToggle-custom li').forEach(function(el) {
+        el.classList.remove('active');
+      });
+      this.classList.add('active');
+  
+      var type = this.getAttribute('data-type');
+      if (type === 'ted') {
+        updateChartCustom(tedLabels, tedValues);
+      } else if (type === 's2l') {
+        updateChartCustom(s2lLabels, s2lValues);
+      }
+    });
+  });
+</script>
+
+<style>
+  .card-custom {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+  }
+  
+  .card-header-custom {
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 0;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+  
+  .card-title-custom {
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+  }
+  
+  .graph-sets-custom {
+    list-style: none;
+    padding-left: 0;
+  }
+  
+  .graph-sets-custom li {
+    display: inline-block;
+    margin-right: 10px;
+    cursor: pointer;
+  }
+  
+  .graph-sets-custom li.active {
+    font-weight: bold;
+  }
+  
+  .card-body-custom {
+    flex: 1 1 auto;
+    padding: 1.25rem;
+  }
+  
+  @media (max-width: 768px) {
+    .card-custom {
+      flex-direction: column;
+      width: 100%;
+    }
+    .card-header-custom {
+      padding: 0.5rem;
+    }
+    .card-body-custom {
+      padding: 0.5rem;
+    }
+  }
+</style>
+
+
+{% endif %}
+    
+    
+
+    <div class="col-lg-5 col-sm-12 col-12 d-flex">
+      <div class="card flex-fill">
+        <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+          <h4 class="card-title mb-0">Recently Allocated Money</h4>
+          <div class="dropdown">
+            <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" class="dropset">
+              <i class="fa fa-ellipsis-v"></i>
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+              <li>
+                <a href="moneyallocationlist.html" class="dropdown-item">Money Allocation List</a>
+              </li>
+              <li>
+                <a href="addmoneyallocation.html" class="dropdown-item">Add Money Allocation</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive dataview">
+            <table class="table datatable">
+              <thead>
+                <tr>
+                  <th>Sno</th>
+
+                  <th>Amount</th>
+
+                  <th>Source</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for allocation in recent_allocations %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ allocation.amount|floatformat:2 }}</td>
+                  <td>{{ allocation.source }}</td>
+                  <td>{{ allocation.created_at|date:"Y-m-d H:i" }}</td>
+                </tr>
+
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+   
+{% if show_row %}    
+<!-- Bar Chart Canvas -->
+<div class="card flex-fill">
+<canvas id="allocationChart" width="800" height="200"></canvas>
+</div>
+
+<!-- Include Chart.js (via CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Parse data passed from the view
+    var allocationMonths = {{ allocation_months|safe }};
+    var allocationTed = {{ allocation_ted|safe }};
+    var allocationS2l = {{ allocation_s2l|safe }};
+
+    // Setup the bar chart
+    var ctx = document.getElementById('allocationChart').getContext('2d');
+    var allocationChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: allocationMonths,
+            datasets: [
+                {
+                    label: 'TED Allocations',
+                    data: allocationTed,
+                    backgroundColor: 'skyblue',
+                },
+                {
+                    label: 'S2L Allocations',
+                    data: allocationS2l,
+                    backgroundColor: 'purple',
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    // Adjust options if needed; you can control bar thickness or grouping here
+                    stacked: false,
+                },
+                y: {
+                    beginAtZero: true,
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+
+  </div>
+  <div class="card mb-0">
+    <div class="card-body">
+      <h4 class="card-title">Recent Expenses</h4>
+      <div class="table-responsive dataview">
+        <table class="table datatable">
+          <thead>
+            <tr>
+              <th>SNo</th>
+              <th>Amount</th>
+              <th>Category</th>
+              <th>Source</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for expense in recent_transactions %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ expense.ammount|floatformat:2 }}</td>
+              <td>
+                {% if expense.category %}
+                  {{ expense.category.name }}
+                {% else %}
+                  N/A
+                {% endif %}
+              </td>
+              <td>{{ expense.source }}</td>
+              <td>{{ expense.created_at|date:"Y-m-d H:i" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('transactionPieChart').getContext('2d');
+    var myPieChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: {{ transactions_labels|safe }},
+        datasets: [{
+          data: {{ transactions_data|safe }},
+          backgroundColor: [
+            'rgba(54, 162, 235, 0.7)',  // Blue for S2L
+            'rgba(75, 192, 192, 0.7)'   // Green for TED
+          ],
+          borderColor: [
+            'rgba(54, 162, 235, 1)',
+            'rgba(75, 192, 192, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+          },
+          tooltip: {
+            enabled: true
+          }
+        }
+      }
+    });
+  });
+</script>
+
+{% endblock %}
+
