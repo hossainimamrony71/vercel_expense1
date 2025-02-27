@@ -534,7 +534,7 @@ class ExpenseListView(LoginRequiredMixin, ListView):
     model = Transaction
     template_name = 'expenselist.html'
     context_object_name = 'expenses'
-    paginate_by = 100
+    paginate_by = 10
     
     def get_queryset(self):
         qs = Transaction.objects.filter(user=self.request.user)
